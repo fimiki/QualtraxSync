@@ -1,0 +1,19 @@
+<Solution>
+  <Folder Name="/Core/">
+    <Project Path="QualtraxSync.Contracts/QualtraxSync.Contracts.csproj" />
+    <Project Path="QualtraxSync.Domain/QualtraxSync.Domain.csproj" />
+    <Project Path="QualtraxSync.Repository/QualtraxSync.Persistence.csproj" Id="2bb8daf8-45fe-4f86-8fe8-46f3792c8dea" />
+    <Project Path="QualtraxSync.Services/QualtraxSync.Services.csproj" />
+  </Folder>
+  <Folder Name="/Infrastructure/">
+    <Project Path="QualtraxSync.Qualtrax/QualtraxSync.Qualtrax.csproj" />
+    <Project Path="QualtraxSync.SharePoint/QualtraxSync.SharePoint.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="QualtraxSync.SharePoint.Test/QualtraxSync.SharePoint.Test.csproj" Id="f980ae2b-93d5-4d9f-ab12-290063046b16" />
+    <Project Path="QualtraxSync.Domain.Test/QualtraxSync.Domain.Test.csproj" />
+    <Project Path="QualtraxSync.Persistence.Test/QualtraxSync.Persistence.Test.csproj" />
+    <Project Path="QualtraxSync.Qualtrax.Test/QualtraxSync.Qualtrax.Test.csproj" Id="8cbba42d-8821-4093-b5ec-9f768932ddf1" />
+  </Folder>
+  <Project Path="QualtraxSync.csproj" />
+</Solution>
