@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -7,6 +8,7 @@ using QualtraxSync.Qualtrax;
 using QualtraxSync.Services;
 using QualtraxSync.SharePoint;
 using Serilog;
+using Serilog.Events;
 
 namespace QualtraxSync;
 
@@ -20,9 +22,21 @@ internal class Program
         builder.Configuration.AddCommandLine(args, SwitchMappings);
 
         // sinks, levels and enrichers are all read from configuration, so they can come from any of the sources above
-        Log.Logger = new LoggerConfiguration()
-            .ReadFrom.Configuration(builder.Configuration)
-            .CreateLogger();
+        var loggerConfiguration = new LoggerConfiguration()
+            .ReadFrom.Configuration(builder.Configuration);
+
+        // Application Insights is an optional sink: it's only enabled when a connection string is configured
+        // (e.g. via ApplicationInsights:ConnectionString, environment variables or user secrets).
+        var appInsightsConnectionString = builder.Configuration["ApplicationInsights:ConnectionString"];
+        if (string.IsNullOrWhiteSpace(appInsightsConnectionString) == false)
+        {
+            var telemetryConfiguration = TelemetryConfiguration.CreateDefault();
+            telemetryConfiguration.ConnectionString = appInsightsConnectionString;
+
+            loggerConfiguration.WriteTo.ApplicationInsights(telemetryConfiguration, TelemetryConverter.Traces, LogEventLevel.Verbose);
+        }
+
+        Log.Logger = loggerConfiguration.CreateLogger();
 
         builder.Logging.ClearProviders();
         builder.Logging.AddSerilog(Log.Logger, dispose: true);

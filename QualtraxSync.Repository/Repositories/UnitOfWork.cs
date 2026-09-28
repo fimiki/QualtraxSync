@@ -7,11 +7,19 @@ namespace QualtraxSync.Persistence.Repositories;
 public class UnitOfWork(
     EntityStore<Folder, int> folders,
     EntityStore<Document, int> documents,
+    EntityStore<Revision, RevisionKey> revisions,
     NotificationDispatcher dispatcher) : IUnitOfWork
 {
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         await dispatcher.DispatchAsync(GetAll(), cancellationToken);
+    }
+
+    public void ResetContext()
+    {
+        folders.ClearAll();
+        documents.ClearAll();
+        revisions.ClearAll();
     }
 
     public IEnumerable<Entity> GetAll()

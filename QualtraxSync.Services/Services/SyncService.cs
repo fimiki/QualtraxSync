@@ -27,30 +27,8 @@ public class SyncService(
 
     public async Task ProcessAsync(CancellationToken cancellationToken)
     {
-        await InitializeAsync(cancellationToken);
         await RefreshAsync(cancellationToken);
         await SyncAsync(cancellationToken);
-    }
-
-    private async Task InitializeAsync(CancellationToken cancellationToken)
-    {
-        if (_lastChange != default) return;
-
-        _lastChange = options.Value.EarliestDocument;
-
-        foreach (var folder in await folderService.GetRootsAsync(cancellationToken))
-        {
-            foreach (var doc in folder.GetAllDocuments())  
-            {
-                var max = doc.Revisions.Max(r => r.Published).Date;
-                if (max > _lastChange)
-                {
-                    _lastChange = max;
-                }
-            }
-        }
-
-        logger.LogInformation("Sync service initialized.  Starting sync from {Date}", _lastChange);
     }
 
     private async Task RefreshAsync(CancellationToken cancellationToken)
@@ -61,6 +39,8 @@ public class SyncService(
         if (_lastRefresh.Date >= now.Date) return;
 
         logger.LogDebug("Running daily document name and location refresh for {Date}.", now.Date);
+
+        unitOfWork.ResetContext();
 
         var refreshes = new List<Task>();
         var roots = await folderService.GetRootsAsync(cancellationToken);
@@ -73,6 +53,12 @@ public class SyncService(
 
             foreach (var document in documents)
             {
+                var max = document.Revisions.Max(r => r.Published).Date;
+                if (max > _lastChange)
+                {
+                    _lastChange = max;
+                }
+
                 refreshes.Add(documentService.RefreshDocumentAsync(document, cancellationToken));
 
                 while (refreshes.Count > 20)
@@ -106,7 +92,11 @@ public class SyncService(
         var publishedAfter = parameters.PublishedAfter;
         var publishedBefore = parameters.PublishedBefore ?? (parameters.PublishedAfter <= options.Value.EarliestDocument ? options.Value.EarliestDocument : parameters.PublishedAfter).Date.AddDays(1);
 
+
+
         var roots = (await folderService.GetRootsAsync(parameters.CancellationToken)).ToHashSet();
+
+        logger.LogInformation("Got root folders in {Seconds}", stopwatch.Elapsed.TotalSeconds);
 
         do
         {
@@ -220,6 +210,11 @@ public class SyncService(
                 logger.LogWarning(ex, "An error occurred while syncing records for folder {Id} {Name} between {After} and {Before}.  Retrying sync ({Try}/{MaxTries})", retryParameters.Parent?.Id ?? -1, retryParameters.Parent?.Name ?? "Root", retryParameters.PublishedAfter, retryParameters.PublishedBefore, retryParameters.Tries, 3);
                 await Task.Delay(TimeSpan.FromSeconds(2*retryParameters.Tries)+TimeSpan.FromMilliseconds(Random.Shared.Next(1000)), time, retryParameters.CancellationToken);
                 await SyncRecordsAsync(retryParameters);
+            }
+            catch
+            {
+                unitOfWork.ResetContext();
+                throw;
             }
 
             publishedAfter = publishedBefore;

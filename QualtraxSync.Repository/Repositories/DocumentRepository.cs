@@ -8,7 +8,7 @@ public class DocumentRepository(EntityStore<Document, int> documents, Initialize
 {
     public async Task<Document?> GetAsync(int id, CancellationToken cancellationToken = default)
     {
-        await initializer.Initializing;
+        await initializer.Initializing(documents.Empty);
         return documents.Get(id);
     }
 

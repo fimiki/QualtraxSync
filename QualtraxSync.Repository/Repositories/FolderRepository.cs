@@ -2,6 +2,7 @@
 using QualtraxSync.Domain.Repositories;
 using QualtraxSync.Persistence.Services;
 using QualtraxSync.Persistence.Services.Materializers;
+using System.Diagnostics;
 
 namespace QualtraxSync.Persistence.Repositories;
 
@@ -22,14 +23,14 @@ public class FolderRepository : IFolderRepository
     }
 
     public async Task<IEnumerable<Folder>> GetRootsAsync(CancellationToken cancellationToken = default)
-    {
-        await initializer.Initializing;
+    {   
+        await initializer.Initializing(folders.Empty);
         return roots.GetAll(folders);
     }
 
     public async Task<Folder?> GetAsync(int id, CancellationToken cancellationToken = default)
     {
-        await initializer.Initializing;
+        await initializer.Initializing(folders.Empty);
         return folders.Get(id);
     }
 

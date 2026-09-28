@@ -13,6 +13,11 @@ public sealed class EntityStore<TEntity, TKey> where TKey : struct where TEntity
         return _entities.Values;
     }
 
+    public void ClearAll()
+    {
+        _entities.Clear();
+    }
+
     public TEntity Add(TEntity entity)
     {
         if (_entities.TryAdd(entity.Id, entity)) return entity;

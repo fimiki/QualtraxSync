@@ -14,7 +14,8 @@ public class Options
         { "--RevisionIdInternalName", "SharePoint:Metadata:RevisionIdInternalName" },
         { "--UseFolders", "SharePoint:Lifecycle:UseFolders" },
         { "--IncludeRetired", "SharePoint:Lifecycle:IncludeRetired" },
-        { "--IncludeArchived", "SharePoint:Lifecycle:IncludeArchived" }
+        { "--IncludeArchived", "SharePoint:Lifecycle:IncludeArchived" },
+        { "--FolderMappings", "SharePoint:FolderMappings" }
     };
 
     /// <summary>

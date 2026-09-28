@@ -59,7 +59,7 @@ public sealed class PersistenceHarness
             new RevisionReactivatedHandler(NullLogger<RevisionReactivatedHandler>.Instance, Options, Files, Metadata, _revisions, PathService)
         ];
 
-        UnitOfWork = new UnitOfWork(_folders, _documents, new NotificationDispatcher(handlers));
+        UnitOfWork = new UnitOfWork(_folders, _documents, _revisions, new NotificationDispatcher(handlers));
     }
 
     public FakeMetadataService Metadata { get; } = new();

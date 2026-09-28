@@ -2,6 +2,7 @@
 using QualtraxSync.Contracts.Services;
 using QualtraxSync.Domain.Entities;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
 namespace QualtraxSync.Persistence.Services.Materializers;
