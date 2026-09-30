@@ -32,7 +32,7 @@ public class FileService(
         {
             try
             {
-                return await UploadAsync(driveId, path, contents, tries, created, cancellationToken);
+                return await UploadFileAsync(driveId, path, contents, created, cancellationToken);
             }
             catch (ServiceException ex) when (tries < maxRetries)
             {
@@ -218,7 +218,7 @@ public class FileService(
         }
     }
 
-    private async Task<bool> UploadAsync(string driveId, string path, Stream contents, int tries = 3, DateTimeOffset? created = null, CancellationToken cancellationToken = default)
+    private async Task<bool> UploadFileAsync(string driveId, string path, Stream contents, DateTimeOffset? created = null, CancellationToken cancellationToken = default)
     {
         var sessionKey = (driveId, path);
 
@@ -295,7 +295,7 @@ public class FileService(
             uploadSession = await graphClient.RequestAdapter.SendAsync(
                 uploadSessionRequest,
                 UploadSession.CreateFromDiscriminatorValue,
-                new Dictionary<string, ParsableFactory<IParsable>> { { "XXX", ODataError.CreateFromDiscriminatorValue } },
+                graphClient.GetDefaultErrorMapper(),
                 cancellationToken);
 
             if (uploadSession != null)

@@ -20,7 +20,12 @@ public class Options
     public int IntervalSeconds { get; set; } = 300;
 
     /// <summary>
-    /// Whether to sync all revisions of a document.  Set during app startup based on the SharePoint:Lifecycle:IncludeArchived configuration value.
+    /// Whether to sync archived revisions of a document.  Set during app startup based on the SharePoint:Lifecycle:IncludeArchived configuration value.
     /// </summary>
-    internal bool SyncAllRevisions { get; set; } 
+    internal bool SyncArchived { get; set; }
+
+    /// <summary>
+    /// Weather to sync retired revisions of a document.  Set during app startup based on the SharePoint:Lifecycle:IncludeRetired configuration value.
+    /// </summary>
+    internal bool SyncRetired { get; set; }
 }

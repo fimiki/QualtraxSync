@@ -38,7 +38,7 @@ public class FolderMaterializer(
             {
                 if (IsRoot(parentPath, out var rootName))
                 {
-                    name = rootName;
+                    name = rootName ?? name;
                 }
                 else
                 {
@@ -87,11 +87,14 @@ public class FolderMaterializer(
         // see if the parent is a root folder
         if (IsRoot(parentPath, out var rootName))
         {
-            if (folders.TryGetValue(rootName, out var rootFolder)) return Materialize(KeyValuePair.Create(rootName, rootFolder), folders);
+            if (rootName != null)
+            {
+                if (folders.TryGetValue(rootName, out var rootFolder)) return Materialize(KeyValuePair.Create(rootName, rootFolder), folders);
 
-            var rootPath = parentPath.Split('/');
-            if (rootPath.Length > 1 && folders.TryGetValue(string.Join('/', rootPath.Take(2)), out var mappedRoot)) return Materialize(KeyValuePair.Create(rootName, mappedRoot), folders);
-            
+                var rootPath = parentPath.Split('/');
+                if (rootPath.Length > 1 && folders.TryGetValue(string.Join('/', rootPath.Take(2)), out var mappedRoot)) return Materialize(KeyValuePair.Create(rootName, mappedRoot), folders);
+            }
+
             return null;
         }
 
@@ -142,7 +145,7 @@ public class FolderMaterializer(
     /// <summary>
     /// Determines if the given path is a root folder path regardless of weather the path contains a lifecycle folder or mapped root
     /// </summary>
-    private bool IsRoot(string path, [NotNullWhen(true)] out string? rootName)
+    private bool IsRoot(string path, out string? rootName)
     {
         if (string.IsNullOrEmpty(path)) 
         {
@@ -152,9 +155,15 @@ public class FolderMaterializer(
 
         var (parentPath, name) = SplitPath(path);
         
-        // handles paths of "/root"
+        // handles paths of "/root" and "/mappedRoot"
         if (string.IsNullOrEmpty(parentPath))
         {
+            if (options.Value.TypeFolders.ContainsKey(name))
+            {
+                rootName = null;
+                return true;
+            }
+
             rootName = name;
             return true;
         }

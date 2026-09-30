@@ -4,7 +4,6 @@ using QualtraxSync.Contracts.Models;
 using QualtraxSync.Contracts.Services;
 using QualtraxSync.Domain.Entities;
 using QualtraxSync.Domain.Repositories;
-using System.Diagnostics;
 
 namespace QualtraxSync.Services.Services;
 
@@ -25,7 +24,15 @@ public class DocumentService(
     private readonly static SemaphoreSlim _semaphore = new(1);
     private readonly Options _options = options.Value;
 
-    public async Task RefreshDocumentAsync(Document document, CancellationToken cancellationToken = default) => await RefreshDocumentAsync(document, null, cancellationToken);
+    public async Task RefreshDocumentAsync(Document document, CancellationToken cancellationToken = default)
+    {
+        await RefreshDocumentAsync(document, (QualtraxDocument?) null, cancellationToken);
+        
+        if (_options.SyncArchived)
+        {
+            await SyncMissingRevisionsAsync(document, cancellationToken);
+        }
+    }
 
     public async Task<bool> SyncRevisionAsync(QualtraxRevision revision, CancellationToken cancellationToken)
     {
@@ -53,7 +60,7 @@ public class DocumentService(
             }
 
             // then, check if the name or location needs to be updated or if any previous revisions are missing
-            await RefreshDocumentAsync(document, revision.Document, cancellationToken);
+            await RefreshDocumentAsync(document, revision, cancellationToken);
 
             // finally, add the revision to this existing document
             if (existing == null)
@@ -64,10 +71,24 @@ public class DocumentService(
             return true;
         }
 
-        if (_options.SyncAllRevisions && revision.Id > 1)
+        if (_options.SyncRetired == false && revision.Document.Status == QualtraxStatus.Retired)
+        {
+            // if the document is retired and we are not syncing retired documents, then we don't need to add it to the repository
+            return false;
+        }
+
+        if (_options.SyncArchived)
         {
             // revisions should be added to a document sequentially, so if this is not the first revision we need to check if any previous revisions are missing and add them first
-            return await SyncPreviousRevisionsAsync(revision, cancellationToken);
+            if (revision.Id > 1)
+            {
+                await SyncPreviousRevisionsAsync(document, revision, cancellationToken);
+                return await SyncRevisionAsync(revision, cancellationToken);
+            }
+        }
+        else
+        {
+            if (revision.Archived.HasValue) return false;
         }
 
         // add the new document to the repository
@@ -87,6 +108,12 @@ public class DocumentService(
         }
 
         return true;
+    }
+
+    private async Task RefreshDocumentAsync(Document document, QualtraxRevision updated, CancellationToken cancellationToken = default)
+    { 
+        await RefreshDocumentAsync(document, updated.Document, cancellationToken);
+        await SyncPreviousRevisionsAsync(document, updated, cancellationToken);
     }
 
     private async Task RefreshDocumentAsync(Document document, QualtraxDocument? updated, CancellationToken cancellationToken = default)
@@ -132,35 +159,36 @@ public class DocumentService(
         {
             _semaphore.Release();
         }
-
-        // check if any previous revisions are missing
-        if (_options.SyncAllRevisions)
-        {
-            await SyncMissingRevisionsAsync(document, cancellationToken);
-        }
     }
 
-    private async Task<bool> SyncPreviousRevisionsAsync(QualtraxRevision revision, CancellationToken cancellationToken = default)
+    private async Task SyncPreviousRevisionsAsync(Document? document, QualtraxRevision revision, CancellationToken cancellationToken = default)
     {
+        if (document != null && revision.Document.Id != document.Id) throw new ArgumentException("Revision does not match the provided document ID", nameof(document));
+
         var id = 1;
         var start = revision.Document.Created;
-       
+        var end = revision.Archived ?? revision.Published;
+
+        Revision? previous = null;
+
         while (id < revision.Id)
         {
-            if (await FindRevisionAsync(id, revision.Document.Id, revision.Document.Folder, start, revision.Published, cancellationToken) is { } previous)
+            previous = document?.Revisions.FirstOrDefault(r => r.Id.Revision == id);
+
+            if (previous == null)
             {
-                await SyncRevisionAsync(previous, cancellationToken);
-            }
-            else
-            {
-                throw new Exception($"Could not find found revision {id} for document {revision.Document.Id} {revision.Document.Name}");
+                if (await FindRevisionAsync(id, revision.Document.Id, revision.Document.Folder, start, end, cancellationToken) is { } found)
+                {
+                    await SyncRevisionAsync(found, cancellationToken);
+                }
+
+                document ??= await documents.GetAsync(revision.Document.Id, cancellationToken);
+                previous = document?.Revisions.FirstOrDefault(r => r.Id.Revision == id) ?? throw new Exception($"Could not find found revision {id} for document {revision.Document.Id} {revision.Document.Name}");
             }
 
             id++;
             start = previous.Archived ?? previous.Published;
         }
-
-        return await SyncRevisionAsync(revision, cancellationToken);
     }
 
     private async Task SyncMissingRevisionsAsync(Document document, CancellationToken cancellationToken = default)
@@ -173,8 +201,8 @@ public class DocumentService(
             if (document.Revisions.FirstOrDefault(r => r.Id.Revision == id) is null)
             {
                 var previous = document.Revisions.OrderByDescending(r => r.Id.Revision).FirstOrDefault(r => r.Id.Revision < id);
-                var start = (previous == null ? document.Created : previous.Archived ?? previous.Published).AddMinutes(-1);
-                var end = (previous == null ? latest.Published : start.Date).AddMinutes(1);
+                var start = previous == null ? document.Created : previous.Published;
+                var end = latest.Archived ?? latest.Published;
 
                 if (await FindRevisionAsync(id, document.Id, folderService.Map(document.Folder), start, end, cancellationToken) is { } found)
                 {

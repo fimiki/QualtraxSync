@@ -12,7 +12,7 @@ public class Initializer(
     FolderMaterializer folderService)
 {
     private readonly Lock _lock = new();
-    private static Task? _loading;
+    private Task? _loading;
 
     /// <summary>
     /// Returns the task loading the SharePoint content, starting it on first use.
@@ -24,7 +24,7 @@ public class Initializer(
         {
             _loading ??= LoadAsync(options.Value.Site.DriveId, metadataService, revisionService, documentService, folderService, default);
 
-            if (reload && _loading.IsCompleted)
+            if (reload && _loading.IsCompletedSuccessfully)
             {
                 _loading = LoadAsync(options.Value.Site.DriveId, metadataService, revisionService, documentService, folderService, default);
             }
@@ -35,6 +35,9 @@ public class Initializer(
 
     private static async Task LoadAsync(string driveId, IMetadataService metadataService, RevisionMaterializer revisionService, DocumentMaterializer documentService, FolderMaterializer folderService, CancellationToken cancellation = default)
     {
+        await metadataService.ProvisionAsync(driveId, typeof(Models.File), cancellation);
+        await metadataService.ProvisionAsync(driveId, typeof(Models.Folder), cancellation);
+
         var getFiles = metadataService.GetAllAsync<Models.File>(driveId, cancellation);
         var getFolders = metadataService.GetAllAsync<Models.Folder>(driveId, cancellation);
 

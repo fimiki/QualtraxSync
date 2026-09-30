@@ -15,7 +15,7 @@ public class Options
         { "--UseFolders", "SharePoint:Lifecycle:UseFolders" },
         { "--IncludeRetired", "SharePoint:Lifecycle:IncludeRetired" },
         { "--IncludeArchived", "SharePoint:Lifecycle:IncludeArchived" },
-        { "--FolderMappings", "SharePoint:FolderMappings" }
+        { "--TypeFolders", "SharePoint:TypeFolders" }
     };
 
     /// <summary>
@@ -40,16 +40,16 @@ public class Options
     /// all root Qualtrax documents will be mirrored to the specified SharePoint folder based on their Qualtrax root folder, 
     /// and any Qualtrax root folders not specified in the mappings will be mirrored to the 'Other' folder.
     /// </summary>
-    public Dictionary<string, string[]> FolderMappings { get; set; } = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase) { {"Other", [] } };
+    public Dictionary<string, string[]> TypeFolders { get; set; } = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase) { {"Other", [] } };
 
     /// <summary>
-    /// True if one or more <see cref="FolderMappings"/> other than 'Other' have been configured, meaning root Qualtrax
+    /// True if one or more <see cref="TypeFolders"/> other than 'Other' have been configured, meaning root Qualtrax
     /// folders should be mirrored under a SharePoint-only parent folder rather than directly at the drive root.
     /// </summary>
-    public bool UsesFolderMappings => FolderMappings.Keys.Any(key => key.Equals("Other", StringComparison.OrdinalIgnoreCase) == false);
+    public bool UsesFolderMappings => TypeFolders.Keys.Any(key => key.Equals("Other", StringComparison.OrdinalIgnoreCase) == false);
 
     /// <summary>
-    /// Resolves the SharePoint-only parent folder that a root Qualtrax folder should be mirrored under, based on <see cref="FolderMappings"/>.
+    /// Resolves the SharePoint-only parent folder that a root Qualtrax folder should be mirrored under, based on <see cref="TypeFolders"/>.
     /// Returns null if no mappings other than 'Other' have been configured, in which case the root Qualtrax folder should be mirrored
     /// directly to the root of the SharePoint drive. If mappings have been configured but the given root folder is not found in any of
     /// them, it is mirrored under the 'Other' folder.
@@ -58,13 +58,13 @@ public class Options
     {
         if (UsesFolderMappings == false) return null;
 
-        foreach (var mapping in FolderMappings)
+        foreach (var type in TypeFolders)
         {
-            if (mapping.Key.Equals("Other", StringComparison.OrdinalIgnoreCase)) continue;
+            if (type.Key.Equals("Other", StringComparison.OrdinalIgnoreCase)) continue;
 
-            if (mapping.Value.Contains(qualtraxRootFolderName, StringComparer.OrdinalIgnoreCase))
+            if (type.Value.Contains(qualtraxRootFolderName, StringComparer.OrdinalIgnoreCase))
             {
-                return mapping.Key;
+                return type.Key;
             }
         }
 
@@ -93,22 +93,22 @@ public class MetadataOptions
     public string QualtraxFolderContentTypeName { get; set; } = string.Empty;
 
     /// <summary>
-    /// The internal name for the Qualtrax ID field in SharePoint.
+    /// The internal name for the Qualtrax ID field in SharePoint.  Must be a non-unique Number column.
     /// </summary>
     public string QualtraxIdInternalName { get; set; } = string.Empty;
 
     /// <summary>
-    /// The internal name for the revision ID field in SharePoint.
+    /// The internal name for the revision ID field in SharePoint.  Must be a non-unique Number column.
     /// </summary>
     public string RevisionIdInternalName { get; set; } = string.Empty;
 
     /// <summary>
-    /// The internal name for the published date field in SharePoint.
+    /// The internal name for the published date field in SharePoint.  Must be a non-unique Date and Time column.
     /// </summary>
     public string PublishedDateInternalName { get; set; } = string.Empty;
 
     /// <summary>
-    /// The internal name for the archived date field in SharePoint.
+    /// The internal name for the archived date field in SharePoint.  Must be a non-unique Date and Time column.
     /// </summary>
     public string ArchivedDateInternalName { get; set; } = string.Empty;
 }

@@ -13,6 +13,7 @@ public class IntegrationGraphClient(
     CompleteJobWithDelayHandler jobHandler) : GraphServiceClient(GetHttpClient(jobHandler), GetCredentials(options))
 {
     public Dictionary<string, ParsableFactory<IParsable>> GetDefaultErrorMapper() => new() { { "XXX", ODataError.CreateFromDiscriminatorValue } };
+
     private static ClientCertificateCredential GetCertificateCredentials(IOptions<Options> options)
     {
         return new ClientCertificateCredential(

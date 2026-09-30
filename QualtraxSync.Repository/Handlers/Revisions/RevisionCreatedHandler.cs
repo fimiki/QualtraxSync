@@ -20,7 +20,7 @@ public class RevisionCreatedHandler(
     EntityStore<Revision, RevisionKey> entities,
     PathService pathService) : INotificationHandler<RevisionCreatedNotification>
 {
-    public int ConcurrentExecutions => 20;
+    public int ConcurrentExecutions => 10;
 
     /// <summary>
     /// Handle any changes to the folder structure or document location before adding files
@@ -40,7 +40,14 @@ public class RevisionCreatedHandler(
             // if this revision resulted in the retirement of the document and retired documents should be excluded, remove the document (i.e.) all revisions from SharePoint
             revision.Document.Remove(notification.Revision.Archived.GetValueOrDefault());
 
-            logger.LogInformation("Skipping upload of {Document} {Id}-{Revision} published on {Published} because it is retired", revision.Document.Name, revision.Document.Id, revision.Id, revision.Published);
+            logger.LogDebug("Skipping upload of {Document} {Id}-{Revision} published on {Published} because it is retired", revision.Document.Name, revision.Document.Id, revision.Id, revision.Published);
+
+            return;
+        }
+
+        if (revision.Archived.HasValue && options.Value.Lifecycle.IncludeArchived == false)
+        {
+            logger.LogDebug("Skipping upload of {Document} {Id}-{Revision} published on {Published} because it is archived", revision.Document.Name, revision.Document.Id, revision.Id, revision.Published);
 
             return;
         }

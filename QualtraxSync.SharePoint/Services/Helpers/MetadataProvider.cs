@@ -22,7 +22,6 @@ public class MetadataProvider<T>(
     ILogger<MetadataProvider<T>> logger) where T : class
 {
     protected readonly IntegrationGraphClient Graph = graphClient;
-
     private readonly ConcurrentDictionary<string, ContentTypeKey> _contentTypes = new();
 
     private string ContentTypeName => schema.Name;
@@ -36,7 +35,6 @@ public class MetadataProvider<T>(
         if (_contentTypes.TryGetValue(driveId, out var cached)) return cached;
 
         var siteId = await siteIdProvider.ResolveSiteIdAsync(driveId);
-
         var contentType = await FindContentTypeAsync(siteId, ContentTypeName);
 
         if (contentType == null)
@@ -56,9 +54,9 @@ public class MetadataProvider<T>(
 
         await EnsureContentTypeColumnsAsync(siteId, contentType.Id!, cancellation);
 
-        var listId = await GetListIdAsync(driveId, cancellation);
+        var listId = await GetListIdAsync(driveId, 0, cancellation);
 
-        var listContentType = await EnsureListContentTypeAsync(siteId, listId, contentType.Id!, cancellation);
+        var listContentType = await EnsureListContentTypeAsync(siteId, listId, contentType.Id!, 0, cancellation);
 
         logger.LogDebug("Content type '{ContentTypeName}' schema confirmed.", ContentTypeName);
 
@@ -67,6 +65,7 @@ public class MetadataProvider<T>(
         _contentTypes[driveId] = key;
 
         return key;
+
     }
 
     /// <summary>
@@ -255,44 +254,66 @@ public class MetadataProvider<T>(
         return columns;
     }
 
-    private async Task<string> EnsureListContentTypeAsync(string siteId, string listId, string siteContentTypeId, CancellationToken cancellation)
+    private async Task<string> EnsureListContentTypeAsync(string siteId, string listId, string siteContentTypeId, int tries, CancellationToken cancellation)
     {
         var existing = await Graph.Sites[siteId].Lists[listId].ContentTypes.GetAsync(cancellationToken: cancellation);
         var match = existing?.Value?.FirstOrDefault(ct => ct.Name == ContentTypeName);
 
         if (match?.Id != null) return match.Id;
 
-        var copy = await Graph.Sites[siteId].Lists[listId].ContentTypes.AddCopy.PostAsync(
+        ContentType? copy = null;
+
+        try
+        {
+            copy = await Graph.Sites[siteId].Lists[listId].ContentTypes.AddCopy.PostAsync(
             new Microsoft.Graph.Sites.Item.Lists.Item.ContentTypes.AddCopy.AddCopyPostRequestBody
             {
                 ContentType = $"https://graph.microsoft.com/v1.0/sites/{siteId}/contentTypes/{siteContentTypeId}"
             },
             null,
             cancellation) ?? throw new InvalidOperationException($"Failed to add content type '{ContentTypeName}' to list '{listId}'.");
+        }
+        catch (ODataError odataError) when (odataError.ResponseStatusCode == (int)System.Net.HttpStatusCode.Conflict && tries < 10)
+        {
+            var delay = TimeSpan.FromSeconds(2 * tries) + TimeSpan.FromMilliseconds(Random.Shared.Next());
+            logger.LogDebug("Conflict encountered while creating content type id {siteContentTypeId} '{ListId}'. Retrying ({Try}/10) in {Delay}.", siteContentTypeId, listId, tries, delay);
+            await Task.Delay(delay, cancellation);
+            return await EnsureListContentTypeAsync(siteId, listId, siteContentTypeId, tries + 1, cancellation);
+        }
 
         logger.LogDebug("Added content type '{ContentTypeName}' to list '{ListId}'.", ContentTypeName, listId);
 
         return copy.Id ?? throw new InvalidOperationException($"Content type '{ContentTypeName}' was added to list '{listId}' without an id.");
     }
 
-    private async Task<string> GetListIdAsync(string driveId, CancellationToken cancellation)
+    private async Task<string> GetListIdAsync(string driveId, int tries, CancellationToken cancellation)
     {
         var list = await Graph.Drives[driveId].List.GetAsync(cancellationToken: cancellation)
             ?? throw new InvalidOperationException($"Failed to resolve the list for drive '{driveId}'.");
 
         if (list.ListProp?.ContentTypesEnabled == false)
         {
-            await Graph.Drives[driveId].List.PatchAsync(
-                new List
-                {
-                    AdditionalData = new Dictionary<string, object>
+            try
+            {
+                await Graph.Drives[driveId].List.PatchAsync(
+                    new List
                     {
-                        { "@odata.etag", list.AdditionalData["@odata.etag"] }
+                        AdditionalData = new Dictionary<string, object>
+                        {
+                            { "@odata.etag", list.AdditionalData["@odata.etag"] }
+                        },
+                        ListProp = new ListInfo { ContentTypesEnabled = true }
                     },
-                    ListProp = new ListInfo { ContentTypesEnabled = true }
-                },
-                null,
-                cancellation);
+                    null,
+                    cancellation);
+            }
+            catch (ODataError odataError) when(odataError.ResponseStatusCode == (int)System.Net.HttpStatusCode.Conflict && tries < 10)
+            {
+                var delay = TimeSpan.FromSeconds(2 * tries) + TimeSpan.FromMilliseconds(Random.Shared.Next());
+                logger.LogDebug("Conflict encountered while enabling content types for list '{ListId}'. Retrying ({Try}/10) in {Delay}.", list.Id, tries, delay);
+                await Task.Delay(delay, cancellation);
+                return await GetListIdAsync(driveId, tries + 1, cancellation);
+            }
         }
 
         return list.Id ?? throw new InvalidOperationException($"The list for drive '{driveId}' does not have an id.");

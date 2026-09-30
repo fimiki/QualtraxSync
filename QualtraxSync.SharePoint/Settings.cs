@@ -40,7 +40,7 @@ public static class Settings
         services.Scan(scan => scan.FromAssemblies(assemblies)
             .AddClasses(classes => classes.AssignableTo(typeof(ISchemaConfiguration<>)))
             .AsSelfWithInterfaces()
-            .WithTransientLifetime()
+            .WithSingletonLifetime()
         );
 
         return services;

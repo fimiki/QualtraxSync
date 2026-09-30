@@ -17,14 +17,15 @@ public class FolderRepository : IFolderRepository
         this.folders = folders;
         this.roots = roots;
         this.initializer = initializer;
-
-        Add(Folder.Retired);
-        Add(Folder.Unretired);
     }
 
     public async Task<IEnumerable<Folder>> GetRootsAsync(CancellationToken cancellationToken = default)
     {   
         await initializer.Initializing(folders.Empty);
+
+        Add(Folder.Retired);
+        Add(Folder.Unretired);
+
         return roots.GetAll(folders);
     }
 

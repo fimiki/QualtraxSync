@@ -79,24 +79,22 @@ public class SyncService(
         _lastRefresh = now;
     }
 
-    private Task SyncAsync(CancellationToken cancellationToken) => SyncRecordsAsync(new SyncParameters(_lastChange, null, null, 0, cancellationToken));
+    private Task SyncAsync(CancellationToken cancellationToken) => SyncRecordsAsync(new SyncParameters(new DateTimeOffset(2021, 7,30,0,0,0, TimeSpan.FromHours(-5)), null, null, 0, cancellationToken)); // SyncRecordsAsync(new SyncParameters(_lastChange, null, null, 0, cancellationToken));
 
     private async Task SyncRecordsAsync(SyncParameters parameters)
     {
         var end = parameters.PublishedBefore ?? time.GetLocalNow();
-        var initializing = true; // _lastChange == options.Value.EarliestDocument;
+        var initializing = _lastChange == options.Value.EarliestDocument;
         var stopwatch = Stopwatch.StartNew();
 
         Task? savingLastChanges = null;
 
         var publishedAfter = parameters.PublishedAfter;
-        var publishedBefore = parameters.PublishedBefore ?? (parameters.PublishedAfter <= options.Value.EarliestDocument ? options.Value.EarliestDocument : parameters.PublishedAfter).Date.AddDays(1);
-
-
+        var publishedBefore = parameters.PublishedBefore.HasValue ?
+            (parameters.PublishedBefore.Value.Date - publishedAfter.Date > TimeSpan.FromDays(1) ? parameters.PublishedAfter.Date.AddDays(1) : parameters.PublishedBefore.Value) :
+            (parameters.PublishedAfter <= options.Value.EarliestDocument ? options.Value.EarliestDocument : parameters.PublishedAfter).Date.AddDays(1);
 
         var roots = (await folderService.GetRootsAsync(parameters.CancellationToken)).ToHashSet();
-
-        logger.LogInformation("Got root folders in {Seconds}", stopwatch.Elapsed.TotalSeconds);
 
         do
         {
@@ -128,6 +126,11 @@ public class SyncService(
                     if (await documentService.SyncRevisionAsync(revision, parameters.CancellationToken))
                     {
                         syncedRevisions.Add(revision);
+                    }
+                    else
+                    {
+                        // if the revision was not synced, we can dispose of the contents to free up memory
+                        revision.Contents.Dispose();
                     }
                 }
 
@@ -219,6 +222,7 @@ public class SyncService(
 
             publishedAfter = publishedBefore;
             publishedBefore = publishedAfter.AddDays(1);
+            publishedBefore = publishedBefore > end ? end : publishedBefore;
 
         } while (publishedAfter < end);
 
@@ -256,20 +260,7 @@ public class SyncService(
 
         logger.LogDebug("New root folder '{RootFolder}' found. Getting history for all files in this record prior to {PublishedBefore}", root.Name, publishedBefore);
 
-        var estimatedCreation = options.Value.EarliestDocument;
-
-        // use the latest item created prior to this root folder to estimate the creation date
-        foreach (var document in existing.SelectMany(e => e.GetAllDocuments().Where(d => d.Id < root.Id)))
-        {
-            if (document.Created > estimatedCreation)
-            {
-                estimatedCreation = document.Created;
-            }
-        }
-
         folder = await folderService.GetUpdatedAsync(root, publishedBefore, cancellationToken);
-
-        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         var parameters = new SyncParameters(options.Value.EarliestDocument, publishedBefore, folder, 0, cancellationToken);
 
@@ -297,27 +288,20 @@ public class SyncService(
         }
 
         var count = 0;
-        var lastPublished = DateTimeOffset.MinValue;
-
         foreach (var revision in revisions)
         {
             // now that the changes have been saved, we can dispose of the contents to free up memory
             revision.Contents.Dispose();
 
-            if (revision.Published > lastPublished)
+            if (revision.Published > _lastChange)
             {
-                lastPublished = revision.Published;
+                _lastChange = revision.Published;
             }
 
             count++;
         }
 
-        if (lastPublished > _lastChange)
-        {
-            _lastChange = lastPublished;
-        }
-
-        logger.LogInformation("Synced {Count} changes in {Seconds} seconds for records published through {Date} in {Folder} after {Tries} attempts.", count, time.GetElapsedTime(start).TotalSeconds, _lastChange, parameters.Parent?.Name ?? "Root", parameters.Tries + 1);
+        logger.LogInformation("Synced {Count} changes in {Seconds} seconds for records published between {After} and {Before} in {Folder} after {Tries} attempts.", count, time.GetElapsedTime(start).TotalSeconds, parameters.PublishedAfter, parameters.PublishedBefore, parameters.Parent?.Name ?? "Root", parameters.Tries + 1);
     }
 
     private record SyncParameters(DateTimeOffset PublishedAfter, DateTimeOffset? PublishedBefore, Folder? Parent, int Tries, CancellationToken CancellationToken);

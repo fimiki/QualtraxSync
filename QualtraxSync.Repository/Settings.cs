@@ -10,13 +10,13 @@ namespace QualtraxSync.Persistence;
 
 public static class Settings
 {
-    private static readonly Configuration Options = new();
+    public static readonly Configuration Options = new();
 
     public static IServiceCollection AddPersistence(this IServiceCollection services, Action<Configuration> options)
     {
         options.Invoke(Options);
 
-        services.AddOptions<Options>().Bind(Options.RepositoryConfig);
+        services.AddOptions<Options>().Bind(Options.PersistenceConfig);
         services.AddLocalServices();
         services.AddDomainImplementations();
         services.AddDomainEventHandlers();
@@ -26,13 +26,13 @@ public static class Settings
 
     private static IServiceCollection AddLocalServices(this IServiceCollection services)
     {
-        services.AddScoped(typeof(EntityStore<,>));
-        services.AddScoped<FolderRoots>();
-        services.AddScoped<FolderMaterializer>();
-        services.AddScoped<DocumentMaterializer>();
-        services.AddScoped<RevisionMaterializer>();
-        services.AddScoped<Initializer>();
-        services.AddScoped<PathService>();
+        services.AddSingleton(typeof(EntityStore<,>));
+        services.AddSingleton<FolderMaterializer>();
+        services.AddSingleton<DocumentMaterializer>();
+        services.AddSingleton<RevisionMaterializer>();
+        services.AddSingleton<FolderRoots>();
+        services.AddSingleton<Initializer>();
+        services.AddSingleton<PathService>();
 
         return services;
     }
@@ -60,8 +60,8 @@ public static class Settings
 
     public class Configuration
     {
-        public IConfigurationSection RepositoryConfig { get; set; } = null!;
+        public IConfigurationSection PersistenceConfig { get; set; } = null!;
 
-        internal Options Repository => RepositoryConfig.Get<Options>() ?? throw new Exception("No Repository app settings found");
+        public Options Persistence => PersistenceConfig.Get<Options>() ?? throw new Exception("No Persistence app settings found");
     }
 }

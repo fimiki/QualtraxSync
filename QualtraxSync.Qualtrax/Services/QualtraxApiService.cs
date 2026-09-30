@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 
 namespace QualtraxSync.Qualtrax.Services;
 
-public class QualtraxApiService(ILogger<QualtraxApiService> logger, IApiClient api, IQualtraxItemService itemService) : IQualtraxApiService
+public class QualtraxApiService(ILogger<QualtraxApiService> logger, IApiClient api, IQualtraxItemService itemService) : IQualtraxApiService, IDisposable
 {
     private readonly Lazy<DirectoryInfo> _tempDirectory = new(() => Directory.CreateTempSubdirectory($"QualtraxFiles_{Guid.NewGuid()}"));
 
@@ -37,6 +37,22 @@ public class QualtraxApiService(ILogger<QualtraxApiService> logger, IApiClient a
             }
 
             yield return await itemService.ToRevisionAsync(file, after, before, cancellationToken);
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_tempDirectory.IsValueCreated)
+        {
+            try
+            {
+                _tempDirectory.Value.Delete(true);
+                logger.LogDebug("Temporary directory '{TempDirectory}' deleted successfully.", _tempDirectory.Value.FullName);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to delete temporary directory '{TempDirectory}'.", _tempDirectory.Value.FullName);
+            }
         }
     }
 }

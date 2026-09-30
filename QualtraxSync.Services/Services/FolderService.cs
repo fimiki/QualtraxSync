@@ -1,4 +1,5 @@
-﻿using QualtraxSync.Contracts.Models;
+﻿using Microsoft.Extensions.Options;
+using QualtraxSync.Contracts.Models;
 using QualtraxSync.Domain.Entities;
 using QualtraxSync.Domain.Repositories;
 using System.Data;
@@ -14,7 +15,9 @@ public interface IFolderService
     Task<IEnumerable<Folder>> GetRootsAsync(CancellationToken cancellationToken = default);
 }
 
-public class FolderService(IFolderRepository folders) : IFolderService
+public class FolderService(
+    IFolderRepository folders,
+    IOptions<Options> options) : IFolderService
 {
     public Task<IEnumerable<Folder>> GetRootsAsync(CancellationToken cancellationToken = default) => folders.GetRootsAsync(cancellationToken);
 
@@ -77,7 +80,7 @@ public class FolderService(IFolderRepository folders) : IFolderService
     private async Task<Folder> CreateFolder(QualtraxItem item, DateTimeOffset update, CancellationToken cancellationToken)
     {
         var roots = await folders.GetRootsAsync(cancellationToken);
-        var estimatedCreation = DateTimeOffset.MinValue;
+        var estimatedCreation = options.Value.EarliestDocument;
 
         // use the latest item created prior to this root folder to estimate the creation date
         foreach (var document in roots.SelectMany(e => e.GetAllDocuments().Where(d => d.Id < item.Id)))
@@ -90,7 +93,9 @@ public class FolderService(IFolderRepository folders) : IFolderService
 
         var parent = item.Folder is not null ? await GetUpdatedAsync(item.Folder, update, cancellationToken) : null;
         var result = new Folder(item.Id, FolderName(item, parent), parent, estimatedCreation, estimatedCreation);
-        foreach(var orphaned in parent?.Children.Where(c => c.Id < -100 && c.Name == result.Name) ?? [])
+
+        // orphaned folders are those found in the repository but without an actual Qualtrax ID
+        foreach (var orphaned in parent?.Children.Where(c => c.Id < -100 && c.Name == result.Name) ?? [])
         {
             foreach (var child in orphaned.Children.ToList())
             {

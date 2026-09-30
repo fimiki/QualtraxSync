@@ -72,15 +72,6 @@ public partial class QualtraxItemService(ILogger<QualtraxItemService> logger, IA
         {
             var revision = await toRevision;
 
-            if (!revision.Contents.CanRead)
-            {
-                revision = revision with { Contents = _streamManager.GetStream() };
-
-                using var fileStream = file.OpenRead();
-                await fileStream.CopyToAsync(revision.Contents, cancellationToken);
-                revision.Contents.Position = 0;
-            }
-
             file.Delete();
 
             return revision;

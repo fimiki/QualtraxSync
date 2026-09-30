@@ -31,7 +31,7 @@ public sealed class PersistenceHarness
         {
             Site = new SiteOptions { DriveId = DriveId },
             Lifecycle = new LifecycleOptions { UseFolders = useLifecycleFolders, IncludeRetired = includeRetired, IncludeArchived = includeArchived },
-            FolderMappings = folderMappings ?? new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase) { { "Other", [] } }
+            TypeFolders = folderMappings ?? new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase) { { "Other", [] } }
         });
         PathService = new PathService(Options);
 

@@ -17,8 +17,8 @@ public static class Settings
 
         services.AddOptions<Options>().Bind(Options.QualtraxConfig);
         services.AddApiClient(Options.Qualtrax);
-        services.AddSingleton<IQualtraxItemService, QualtraxItemService>();
-        services.AddSingleton<IQualtraxApiService, QualtraxApiService>();
+        services.AddScoped<IQualtraxItemService, QualtraxItemService>();
+        services.AddScoped<IQualtraxApiService, QualtraxApiService>();
 
         return services;
     }

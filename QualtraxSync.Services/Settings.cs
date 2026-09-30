@@ -13,7 +13,14 @@ public static class Settings
     {
         options.Invoke(Options);
 
-        services.AddOptions<Options>().Bind(Options.SyncConfig).Configure(options => options.SyncAllRevisions = Options.SyncAllRevisions);
+        services.AddOptions<Options>()
+            .Bind(Options.SyncConfig)
+            .Configure(options => 
+            {
+                options.SyncArchived = Options.IncludeArchived;
+                options.SyncRetired = Options.IncludeRetired;
+            });
+
         services.AddScoped<IFolderService, FolderService>();
         services.AddScoped<IDocumentService, DocumentService>();
         services.AddScoped<ISyncService, SyncService>();
@@ -27,6 +34,8 @@ public static class Settings
 
         internal Options Sync => SyncConfig.Get<Options>() ?? throw new Exception("No Sync settings found");
 
-        public bool SyncAllRevisions { get; set; } = false;
+        public bool IncludeArchived { get; set; } = false;
+
+        public bool IncludeRetired { get; set; } = false;
     }
 }

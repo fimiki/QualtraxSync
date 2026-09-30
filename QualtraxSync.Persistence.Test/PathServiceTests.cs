@@ -17,7 +17,7 @@ public class PathServiceTests
         var options = Microsoft.Extensions.Options.Options.Create(new PersistenceOptions
         {
             Lifecycle = new LifecycleOptions { UseFolders = useLifecycleFolders },
-            FolderMappings = folderMappings ?? new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase) { { "Other", [] } }
+            TypeFolders = folderMappings ?? new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase) { { "Other", [] } }
         });
 
         return new PathService(options);

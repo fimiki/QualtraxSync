@@ -50,12 +50,12 @@ internal class Program
                 sharePoint.AzureConfig = builder.Configuration.GetSection(SharePoint.Options.Section);
                 sharePoint.SchemaConfigurations = [typeof(Persistence.Settings).Assembly];
             });
-            builder.Services.AddPersistence(persistence => persistence.RepositoryConfig = builder.Configuration.GetSection(Persistence.Options.Section));
+            builder.Services.AddPersistence(persistence => persistence.PersistenceConfig = builder.Configuration.GetSection(Persistence.Options.Section));
             builder.Services.AddSyncService(sync =>
             {
                 sync.SyncConfig = builder.Configuration.GetSection(Services.Options.Section);
-                sync.SyncAllRevisions = builder.Configuration.GetValue<bool>("SharePoint:Lifecycle:IncludeArchived");
-
+                sync.IncludeArchived = Persistence.Settings.Options.Persistence.Lifecycle.IncludeArchived;
+                sync.IncludeRetired = Persistence.Settings.Options.Persistence.Lifecycle.IncludeRetired;
             });
             builder.Services.AddHostedService<Worker>();
 

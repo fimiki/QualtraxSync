@@ -36,14 +36,14 @@ public class MetadataService(
 
     public Task ProvisionAsync(string driveId, Type type, CancellationToken cancellationToken)
     {
-        var method = typeof(MetadataService).GetMethod(nameof(ProvisionAsync), BindingFlags.NonPublic | BindingFlags.Instance)?.MakeGenericMethod(type)
-            ?? throw new InvalidOperationException($"Failed to retrieve {nameof(ProvisionAsync)} method for {type.Name} type.");
+        var method = typeof(MetadataService).GetMethod(nameof(ProvisionMetadataAsync), BindingFlags.NonPublic | BindingFlags.Instance)?.MakeGenericMethod(type)
+            ?? throw new InvalidOperationException($"Failed to retrieve {nameof(ProvisionMetadataAsync)} method for {type.Name} type.");
 
-        return (Task?)method.Invoke(this, [..driveId, cancellationToken])
-            ?? throw new InvalidOperationException($"Failed to invoke {nameof(ProvisionAsync)} for {type.Name} type.");
+        return (Task?)method.Invoke(this, new object[] { driveId, cancellationToken })
+            ?? throw new InvalidOperationException($"Failed to invoke {nameof(ProvisionMetadataAsync)} for {type.Name} type.");
     }
 
-    private async Task ProvisionAsync<T>(string driveId, CancellationToken cancellationToken) where T : class
+    private async Task ProvisionMetadataAsync<T>(string driveId, CancellationToken cancellationToken) where T : class
     {
         var provider = await GetAsync<T> (driveId);
         await provider.ProvisionAsync(driveId, cancellationToken);

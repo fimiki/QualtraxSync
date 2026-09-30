@@ -102,7 +102,7 @@ public class ApiClient(HttpClient httpClient, ILogger<ApiClient> logger, TimePro
 
         if (zipArchive.Entries.Count == 0) return [];
 
-        logger.LogDebug("Found {FileCount} files for folder ID '{FolderId}' modified after '{ModifiedAfter}' in {Time} seconds", zipArchive.Entries.Count, folderId, publishedAfter, elapsedTime.TotalSeconds);
+        logger.LogDebug("Found {FileCount} files for folder ID '{FolderId}' modified between '{ModifiedAfter}' and '{ModifiedBefore}' in {Time} seconds", zipArchive.Entries.Count, folderId, publishedAfter, publishedBefore, elapsedTime.TotalSeconds);
 
         var tempDirectory = downloadTo.Value;
         var folderDirectory = tempDirectory.CreateSubdirectory(publishedAfter.ToString("s").Replace(':', '-') + "-" + folderId + "-" + zipArchive.Entries.Count + "-" + Random.Shared.Next());
