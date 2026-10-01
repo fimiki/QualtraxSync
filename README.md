@@ -55,6 +55,11 @@ When `UseFolders` is `false`, every revision stays in the document's own folder 
 - **`Forms` root folder**: SharePoint reserves the name `Forms` at the root of a library, so a Qualtrax root folder named `Forms` is mirrored as `Form Templates`.
 - **Empty folders**: a folder that is left empty after its documents are moved out is removed.
 
+### Timestamps
+
+The `Created` timestamp of a Qualtrax file matches the date the file was created in Qualtrax.
+The `Modified` timestamp of a Qualtrax folder matches the latest `Published` or `Archived` date of any revision in that folder or its subfolders and is also updated when a child item is renamed or moved. This makes it easy to see which folders have changed since the last sync.
+
 ## Revision naming convention
 
 Each revision is stored as a separate file. The name follows this pattern:
@@ -89,7 +94,7 @@ Settings are loaded in this order. Later sources override earlier ones:
 3. Environment variables. Replace `:` with `__`, for example `Qualtrax__Token`.
 4. Command-line arguments. Use the full key (`--Qualtrax:Token=...`) or the shortcut switch listed below (`--Token ...`).
 
-### Qualtrax (`Qualtrax`)
+### Qualtrax
 
 | Key | Switch | Default | Description |
 |-----|--------|---------|-------------|
@@ -97,7 +102,7 @@ Settings are loaded in this order. Later sources override earlier ones:
 | `Qualtrax:Token` | `--Token` | *(empty)* | API authentication token. See [Getting started with API development](https://iqm-ess.help.ideagen.com/hc/en-gb/articles/19192252856850-Getting-started-with-API-development). |
 | `Qualtrax:UserAgent` | `--UserAgent` | `QualtraxSync` in `appsettings.json` | `User-Agent` header sent with every request to Qualtrax. |
 
-### Azure authentication (`Azure`)
+### Azure authentication
 
 QualtraxSync signs in to Microsoft Graph with an Entra ID (Azure AD) app registration that uses a client secret. The app needs permission to read and write to the target SharePoint site and drive. (Sites.ReadWrite.All and Sites.Manage.All or Sites.Selected with appropriate roles)
 
@@ -107,7 +112,7 @@ QualtraxSync signs in to Microsoft Graph with an Entra ID (Azure AD) app registr
 | `Azure:Auth:ClientId` | `--ClientId` | *(empty)* | App registration (client) ID. |
 | `Azure:Auth:ClientSecret` | `--ClientSecret` | *(empty)* | App registration client secret. |
 
-### SharePoint (`SharePoint`)
+### SharePoint
 
 | Key | Switch | Default | Description |
 |-----|--------|---------|-------------|
@@ -127,9 +132,10 @@ Example `TypeFolders`:
 }
 ```
 
-#### Metadata (`SharePoint:Metadata`)
+#### Metadata
 
-These settings are optional. If they aren't set, the content types and columns are **provisioned automatically**.
+These are the names of the site-level SharePoint content types and columns that hold Qualtrax metadata used by the application to track mirrored files and folders.  Any that are not set here will be **provisioned automatically** at startup.  
+For example, you may specify the name of a pre-configured content type in SharePoint to be used for mirrored Qualtrax files, and the application will add the additional columns to that content type if they don't already exist.
 
 | Key | Switch | Description |
 |-----|--------|-------------|
@@ -140,39 +146,39 @@ These settings are optional. If they aren't set, the content types and columns a
 | `SharePoint:Metadata:PublishedDateInternalName` | `--PublishedDateInternalName` | Internal name of the published date column (non-unique Date and Time). |
 | `SharePoint:Metadata:ArchivedDateInternalName` | `--ArchivedDateInternalName` | Internal name of the archived date column (non-unique Date and Time). |
 
-### Sync (`Sync`)
+### Sync
 
 | Key | Switch | Default | Description |
 |-----|--------|---------|-------------|
 | `Sync:EarliestDocument` | `--EarliestDocument` | `1990-01-01T00:00:00+00:00` | Publish date of the earliest Qualtrax document. Syncing starts here on the first run and whenever a new root folder is found. |
 | `Sync:IntervalSeconds` | `--IntervalSeconds` | `300` | Seconds between sync runs. Must be at least 1. |
 
-### Application Insights (`ApplicationInsights`)
+### Application Insights
 
 | Key | Default | Description |
 |-----|---------|-------------|
 | `ApplicationInsights:ConnectionString` | *(empty)* | Optional. When set, all log events are also sent to Application Insights as traces. When empty, the sink is not added. |
 
-### Logging (`Serilog`)
+### Logging
 
 Logging uses [Serilog](https://serilog.net/) and is configured through the `Serilog` section (see [Serilog.Settings.Configuration](https://github.com/serilog/serilog-settings-configuration)). The default `appsettings.json` sets up:
 
-- **Console**: short `[HH:mm:ss LVL] message` output.
-- **File**: `Logging/qualtraxsync-.log`, rolled daily and kept for 31 days.
-- **Minimum levels**: `Information` by default, `Warning` for `Microsoft`, `System` and `Polly`.
-- **Enrichment**: `FromLogContext`, plus an `Application` property set to `QualtraxSync`.
-
-The `Serilog.Sinks.EventLog` package is also included, so you can add a Windows Event Log sink in configuration.
+- **Minimum levels**: `Error` by default, `Information` for the `QualtraxSync` namespace.
+- **Sinks**: `File`, `EventLog`, and `Console` by default.
 
 ## Running
 
+Below are the minimum required arguments to run the application.
+
+Console:
 ```powershell
-dotnet run -- --Url https://qualtrax.example.com/api --Token <token> `
-  --TenantId <tenant> --ClientId <client> --ClientSecret <secret> `
-  --DriveId <drive-id>
+dotnet run -- --Url https://qualtrax.example.com/api --Token <token> --UserAgent <user-agent> --TenantId <tenant> --ClientId <client> --ClientSecret <secret> --DriveId <drive-id>
 ```
 
-Keep secrets (`Qualtrax:Token`, `Azure:Auth:ClientSecret`, `ApplicationInsights:ConnectionString`) in user secrets, environment variables or a secret store, not in `appsettings.json`.
+Executable:
+```powershell
+QualtraxSync.exe --Url https://qualtrax.example.com/api --Token <token> --UserAgent <user-agent> --TenantId <tenant> --ClientId <client> --ClientSecret <secret> --DriveId <drive-id>
+```
 
 ## Solution structure
 

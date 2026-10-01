@@ -21,22 +21,7 @@ internal class Program
         // command line takes precedence over environment variables, which take precedence over appsettings.json
         builder.Configuration.AddCommandLine(args, SwitchMappings);
 
-        // sinks, levels and enrichers are all read from configuration, so they can come from any of the sources above
-        var loggerConfiguration = new LoggerConfiguration()
-            .ReadFrom.Configuration(builder.Configuration);
-
-        // Application Insights is an optional sink: it's only enabled when a connection string is configured
-        // (e.g. via ApplicationInsights:ConnectionString, environment variables or user secrets).
-        var appInsightsConnectionString = builder.Configuration["ApplicationInsights:ConnectionString"];
-        if (string.IsNullOrWhiteSpace(appInsightsConnectionString) == false)
-        {
-            var telemetryConfiguration = TelemetryConfiguration.CreateDefault();
-            telemetryConfiguration.ConnectionString = appInsightsConnectionString;
-
-            loggerConfiguration.WriteTo.ApplicationInsights(telemetryConfiguration, TelemetryConverter.Traces, LogEventLevel.Verbose);
-        }
-
-        Log.Logger = loggerConfiguration.CreateLogger();
+        Log.Logger = CreateLogger(builder.Configuration);
 
         builder.Logging.ClearProviders();
         builder.Logging.AddSerilog(Log.Logger, dispose: true);
@@ -88,4 +73,31 @@ internal class Program
         .SelectMany(map => map)
         .ToDictionary(entry => entry.Key, entry => entry.Value);
 
+    private static Serilog.Core.Logger CreateLogger(IConfiguration configuration)
+    {
+        var loggerConfiguration = new LoggerConfiguration().ReadFrom.Configuration(configuration);
+
+        // Application Insights is an optional sink: it's only enabled when a connection string is configured
+        // (e.g. via ApplicationInsights:ConnectionString, environment variables or user secrets).
+        var appInsightsConnectionString = configuration["ApplicationInsights:ConnectionString"];
+
+        if (string.IsNullOrWhiteSpace(appInsightsConnectionString) == false)
+        {
+            var telemetryConfiguration = TelemetryConfiguration.CreateDefault();
+            telemetryConfiguration.ConnectionString = appInsightsConnectionString;
+            loggerConfiguration.WriteTo.ApplicationInsights(telemetryConfiguration, TelemetryConverter.Traces, LogEventLevel.Verbose);
+        }
+        else if (configuration.GetSection("Serilog:WriteTo").GetChildren().Any() == false)
+        {
+            loggerConfiguration.WriteTo.Console();
+        }
+
+        if (configuration.GetSection("Serilog:MinimumLevel").GetChildren().Any() == false)
+        {
+            loggerConfiguration.MinimumLevel.Error();
+            loggerConfiguration.MinimumLevel.Override(nameof(QualtraxSync), LogEventLevel.Information);
+        }
+
+        return loggerConfiguration.CreateLogger();
+    }
 }
