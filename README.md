@@ -189,6 +189,8 @@ Executable:
 QualtraxSync.exe --Url https://qualtrax.example.com --Token <token> --UserAgent <user-agent> --TenantId <tenant> --ClientId <client> --ClientSecret <secret> --DriveId <drive-id>
 ```
 
+If using appsettings.json for configuration, ensure it is located in the same folder as the executable.  Relative paths specified in the configuration are relative to the executable's folder.
+
 ## Solution structure
 
 | Project | Purpose |
