@@ -54,11 +54,12 @@ When `UseFolders` is `false`, every revision stays in the document's own folder 
 
 - **`Forms` root folder**: SharePoint reserves the name `Forms` at the root of a library, so a Qualtrax root folder named `Forms` is mirrored as `Form Templates`.
 - **Empty folders**: a folder that is left empty after its documents are moved out is removed.
+- **Document folders**: In Qualtrax, documents may have child documents.  For such cases in SharePoint a folder with the name of the parent document is created along with the file.
 
 ### Timestamps
 
-The `Created` timestamp of a Qualtrax file matches the date the file was created in Qualtrax.
-The `Modified` timestamp of a Qualtrax folder matches the latest `Published` or `Archived` date of any revision in that folder or its subfolders and is also updated when a child item is renamed or moved. This makes it easy to see which folders have changed since the last sync.
+- The `Created` timestamp of a Qualtrax file matches the date the file was created in Qualtrax.
+- The `Modified` timestamp of a Qualtrax folder matches the latest `Published` or `Archived` date of any revision in that folder or its subfolders and is also updated when a child item is renamed or moved. This makes it easy to see which folders have changed since the last sync.
 
 ## Revision naming convention
 
