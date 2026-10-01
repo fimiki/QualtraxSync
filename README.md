@@ -181,12 +181,12 @@ Below are the minimum required arguments to run the application.
 
 Console:
 ```powershell
-dotnet run -- --Url https://qualtrax.example.com/api --Token <token> --UserAgent <user-agent> --TenantId <tenant> --ClientId <client> --ClientSecret <secret> --DriveId <drive-id>
+dotnet run -- --Url https://qualtrax.example.com --Token <token> --UserAgent <user-agent> --TenantId <tenant> --ClientId <client> --ClientSecret <secret> --DriveId <drive-id>
 ```
 
 Executable:
 ```powershell
-QualtraxSync.exe --Url https://qualtrax.example.com/api --Token <token> --UserAgent <user-agent> --TenantId <tenant> --ClientId <client> --ClientSecret <secret> --DriveId <drive-id>
+QualtraxSync.exe --Url https://qualtrax.example.com --Token <token> --UserAgent <user-agent> --TenantId <tenant> --ClientId <client> --ClientSecret <secret> --DriveId <drive-id>
 ```
 
 ## Solution structure
