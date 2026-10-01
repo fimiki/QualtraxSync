@@ -16,7 +16,10 @@ internal class Program
 {
     static async Task<int> Main(string[] args)
     {
-        var builder = Host.CreateApplicationBuilder(args);
+        // anchor the executable's directory so relative paths resolve consistently for both console and service hosting.
+        Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+
+        var builder = Host.CreateApplicationBuilder();
 
         // command line takes precedence over environment variables, which take precedence over appsettings.json
         builder.Configuration.AddCommandLine(args, SwitchMappings);
@@ -28,6 +31,7 @@ internal class Program
 
         try
         {
+            builder.Services.AddWindowsService(options => options.ServiceName = "QualtraxSync");
             builder.Services.AddSingleton(TimeProvider.System);
             builder.Services.AddQualtrax(qualtrax => qualtrax.QualtraxConfig = builder.Configuration.GetSection(Qualtrax.Options.Section));
             builder.Services.AddSharePoint(sharePoint =>
