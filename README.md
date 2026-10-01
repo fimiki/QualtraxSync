@@ -54,6 +54,7 @@ When `UseFolders` is `false`, every revision stays in the document's own folder 
 
 - **`Forms` root folder**: SharePoint reserves the name `Forms` at the root of a library, so a Qualtrax root folder named `Forms` is mirrored as `Form Templates`.
 - **Empty folders**: a folder that is left empty after its documents are moved out is removed.
+- **Document folders**: In Qualtrax, documents may have child documents.  For such cases in SharePoint a folder with the name of the parent document is created along with the file.
 
 ### Timestamps
 
