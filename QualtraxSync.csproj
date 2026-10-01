@@ -6,7 +6,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <StartupObject>QualtraxSync.Program</StartupObject>
-    <PublishTrimmed>True</PublishTrimmed>
     <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
     <UserSecretsId>033a0b2e-da88-473c-96a9-e342ad4c1778</UserSecretsId>
     <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>

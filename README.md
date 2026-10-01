@@ -57,8 +57,8 @@ When `UseFolders` is `false`, every revision stays in the document's own folder 
 
 ### Timestamps
 
-The `Created` timestamp of a Qualtrax file matches the date the file was created in Qualtrax.
-The `Modified` timestamp of a Qualtrax folder matches the latest `Published` or `Archived` date of any revision in that folder or its subfolders and is also updated when a child item is renamed or moved. This makes it easy to see which folders have changed since the last sync.
+- The `Created` timestamp of a Qualtrax file matches the date the file was created in Qualtrax.
+- The `Modified` timestamp of a Qualtrax folder matches the latest `Published` or `Archived` date of any revision in that folder or its subfolders and is also updated when a child item is renamed or moved. This makes it easy to see which folders have changed since the last sync.
 
 ## Revision naming convention
 
@@ -134,8 +134,7 @@ Example `TypeFolders`:
 
 #### Metadata
 
-These are the names of the site-level SharePoint content types and columns that hold Qualtrax metadata used by the application to track mirrored files and folders.  Any that are not set here will be **provisioned automatically** at startup.  
-For example, you may specify the name of a pre-configured content type in SharePoint to be used for mirrored Qualtrax files, and the application will add the additional columns to that content type if they don't already exist.
+These are the names of the site-level SharePoint content types and columns that hold Qualtrax metadata used by the application to track mirrored files and folders.  Any that are not set here will be **provisioned automatically** at startup.  For example, you may specify the name of a pre-configured content type in SharePoint to be used for mirrored Qualtrax files, and the application will add the additional columns to that content type if they don't already exist.
 
 | Key | Switch | Description |
 |-----|--------|-------------|
@@ -161,10 +160,19 @@ For example, you may specify the name of a pre-configured content type in ShareP
 
 ### Logging
 
-Logging uses [Serilog](https://serilog.net/) and is configured through the `Serilog` section (see [Serilog.Settings.Configuration](https://github.com/serilog/serilog-settings-configuration)). The default `appsettings.json` sets up:
+Logging uses [Serilog](https://serilog.net/) and is configured through the `Serilog` section (see [Serilog.Settings.Configuration](https://github.com/serilog/serilog-settings-configuration)).  `File`, `EventLog`, `Console`, and `Application Insights` sinks are available.
+
+Without any configuration, the default logging setup is:
 
 - **Minimum levels**: `Error` by default, `Information` for the `QualtraxSync` namespace.
-- **Sinks**: `File`, `EventLog`, and `Console` by default.
+- **Sinks**: `Console`.
+
+The default `appsettings.json` sets up:
+
+- **Console**: short `[HH:mm:ss LVL] message` output.
+- **File**: `Logging/qualtraxsync-.log`, rolled daily and kept for 31 days.
+- **Minimum levels**: `Information` by default, `Warning` for `Microsoft`, `System` and `Polly`.
+- **Enrichment**: `FromLogContext`, plus an `Application` property set to `QualtraxSync`.
 
 ## Running
 
