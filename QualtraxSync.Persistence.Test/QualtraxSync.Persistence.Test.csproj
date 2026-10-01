@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\QualtraxSync.Repository\QualtraxSync.Persistence.csproj" />
+    <ProjectReference Include="..\QualtraxSync.Persistence\QualtraxSync.Persistence.csproj" />
   </ItemGroup>
 
   <ItemGroup>

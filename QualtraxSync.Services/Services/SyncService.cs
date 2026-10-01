@@ -79,7 +79,7 @@ public class SyncService(
         _lastRefresh = now;
     }
 
-    private Task SyncAsync(CancellationToken cancellationToken) => SyncRecordsAsync(new SyncParameters(new DateTimeOffset(2021, 7,30,0,0,0, TimeSpan.FromHours(-5)), null, null, 0, cancellationToken)); // SyncRecordsAsync(new SyncParameters(_lastChange, null, null, 0, cancellationToken));
+    private Task SyncAsync(CancellationToken cancellationToken) => SyncRecordsAsync(new SyncParameters(_lastChange, null, null, 0, cancellationToken)); // SyncRecordsAsync(new SyncParameters(_lastChange, null, null, 0, cancellationToken));
 
     private async Task SyncRecordsAsync(SyncParameters parameters)
     {

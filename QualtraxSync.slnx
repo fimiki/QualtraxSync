@@ -2,7 +2,7 @@
   <Folder Name="/Core/">
     <Project Path="QualtraxSync.Contracts/QualtraxSync.Contracts.csproj" />
     <Project Path="QualtraxSync.Domain/QualtraxSync.Domain.csproj" />
-    <Project Path="QualtraxSync.Repository/QualtraxSync.Persistence.csproj" Id="2bb8daf8-45fe-4f86-8fe8-46f3792c8dea" />
+    <Project Path="QualtraxSync.Persistence/QualtraxSync.Persistence.csproj" Id="2bb8daf8-45fe-4f86-8fe8-46f3792c8dea" />
     <Project Path="QualtraxSync.Services/QualtraxSync.Services.csproj" />
   </Folder>
   <Folder Name="/Infrastructure/">

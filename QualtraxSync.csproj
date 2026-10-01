@@ -21,7 +21,7 @@
     <Compile Remove="QualtraxSync.Persistence.Test\**" />
     <Compile Remove="QualtraxSync.Qualtrax.Test\**" />
     <Compile Remove="QualtraxSync.Qualtrax\**" />
-    <Compile Remove="QualtraxSync.Repository\**" />
+    <Compile Remove="QualtraxSync.Persistence\**" />
     <Compile Remove="QualtraxSync.Services\**" />
     <Compile Remove="QualtraxSync.SharePoint\**" />
     <Compile Remove="Tests\**" />
@@ -33,7 +33,7 @@
     <EmbeddedResource Remove="QualtraxSync.Persistence.Test\**" />
     <EmbeddedResource Remove="QualtraxSync.Qualtrax.Test\**" />
     <EmbeddedResource Remove="QualtraxSync.Qualtrax\**" />
-    <EmbeddedResource Remove="QualtraxSync.Repository\**" />
+    <EmbeddedResource Remove="QualtraxSync.Persistence\**" />
     <EmbeddedResource Remove="QualtraxSync.Services\**" />
     <EmbeddedResource Remove="QualtraxSync.SharePoint\**" />
     <EmbeddedResource Remove="Tests\**" />
@@ -45,7 +45,7 @@
     <None Remove="QualtraxSync.Persistence.Test\**" />
     <None Remove="QualtraxSync.Qualtrax.Test\**" />
     <None Remove="QualtraxSync.Qualtrax\**" />
-    <None Remove="QualtraxSync.Repository\**" />
+    <None Remove="QualtraxSync.Persistence\**" />
     <None Remove="QualtraxSync.Services\**" />
     <None Remove="QualtraxSync.SharePoint\**" />
     <None Remove="Tests\**" />
@@ -64,7 +64,7 @@
 
   <ItemGroup>
     <ProjectReference Include="QualtraxSync.Qualtrax\QualtraxSync.Qualtrax.csproj" />
-    <ProjectReference Include="QualtraxSync.Repository\QualtraxSync.Persistence.csproj" />
+    <ProjectReference Include="QualtraxSync.Persistence\QualtraxSync.Persistence.csproj" />
     <ProjectReference Include="QualtraxSync.Services\QualtraxSync.Services.csproj" />
     <ProjectReference Include="QualtraxSync.SharePoint\QualtraxSync.SharePoint.csproj" />
   </ItemGroup>
