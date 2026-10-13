@@ -1,5 +1,4 @@
-﻿using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -77,21 +76,14 @@ internal class Program
         .SelectMany(map => map)
         .ToDictionary(entry => entry.Key, entry => entry.Value);
 
-    private static Serilog.Core.Logger CreateLogger(IConfiguration configuration)
+    private static Serilog.Core.Logger CreateLogger(ConfigurationManager configuration)
     {
         var loggerConfiguration = new LoggerConfiguration().ReadFrom.Configuration(configuration);
 
-        // Application Insights is an optional sink: it's only enabled when a connection string is configured
-        // (e.g. via ApplicationInsights:ConnectionString, environment variables or user secrets).
-        var appInsightsConnectionString = configuration["ApplicationInsights:ConnectionString"];
-
-        if (string.IsNullOrWhiteSpace(appInsightsConnectionString) == false)
-        {
-            var telemetryConfiguration = TelemetryConfiguration.CreateDefault();
-            telemetryConfiguration.ConnectionString = appInsightsConnectionString;
-            loggerConfiguration.WriteTo.ApplicationInsights(telemetryConfiguration, TelemetryConverter.Traces, LogEventLevel.Verbose);
-        }
-        else if (configuration.GetSection("Serilog:WriteTo").GetChildren().Any() == false)
+        // Console, File, Application Insights, MSSqlServer, and Elasticsearch sinks are all configured
+        // declaratively through the Serilog:WriteTo section (see appsettings.json). Fill in the relevant
+        // Args (e.g. connectionString, nodeUris) to enable each sink; sinks left unconfigured are skipped.
+        if (configuration.GetSection("Serilog:WriteTo").GetChildren().Any() == false)
         {
             loggerConfiguration.WriteTo.Console();
         }

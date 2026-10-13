@@ -45,6 +45,12 @@ public class IntegrationGraphClient(
         var handlers = GraphClientFactory.CreateDefaultHandlers();
         jobHandler.SetDelay(TimeSpan.FromSeconds(2).TotalMilliseconds);
         handlers.Add(jobHandler);
-        return GraphClientFactory.Create(handlers);
+
+        var finalHandler = new SocketsHttpHandler
+        {
+            PooledConnectionLifetime = TimeSpan.FromHours(1)
+        };
+
+        return GraphClientFactory.Create(handlers, finalHandler: finalHandler);
     }
 }

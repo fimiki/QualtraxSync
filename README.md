@@ -153,15 +153,9 @@ These are the names of the site-level SharePoint content types and columns that 
 | `Sync:EarliestDocument` | `--EarliestDocument` | `1990-01-01T00:00:00+00:00` | Publish date of the earliest Qualtrax document. Syncing starts here on the first run and whenever a new root folder is found. |
 | `Sync:IntervalSeconds` | `--IntervalSeconds` | `300` | Seconds between sync runs. Must be at least 1. |
 
-### Application Insights
-
-| Key | Default | Description |
-|-----|---------|-------------|
-| `ApplicationInsights:ConnectionString` | *(empty)* | Optional. When set, all log events are also sent to Application Insights as traces. When empty, the sink is not added. |
-
 ### Logging
 
-Logging uses [Serilog](https://serilog.net/) and is configured through the `Serilog` section (see [Serilog.Settings.Configuration](https://github.com/serilog/serilog-settings-configuration)).  `File`, `EventLog`, `Console`, and `Application Insights` sinks are available.
+Logging uses [Serilog](https://serilog.net/) and is configured through the `Serilog` section (see [Serilog.Settings.Configuration](https://github.com/serilog/serilog-settings-configuration)).  `File`, `EventLog`, `Console`, `MsSqlServer`, `Elasticsearch`, and `Application Insights` sinks are available.
 
 Without any configuration, the default logging setup is:
 

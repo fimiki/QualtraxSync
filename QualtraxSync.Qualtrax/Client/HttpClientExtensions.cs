@@ -22,10 +22,10 @@ internal static class HttpClientExtensions
                     .ParseAdd("application/vnd.qualtrax.v1+json");
                 client.DefaultRequestHeaders.AcceptEncoding
                     .ParseAdd("gzip, deflate, br");
-                client.DefaultRequestVersion = HttpVersion.Version20;
-                client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower;
+                client.DefaultRequestVersion = HttpVersion.Version11;
+                client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher;
             })
-            .SetHandlerLifetime(TimeSpan.FromMinutes(10))
+            .SetHandlerLifetime(TimeSpan.FromHours(1))
             .AddStandardResilienceHandler(options =>
             {
                 options.AttemptTimeout.Timeout = TimeSpan.FromMinutes(10);
